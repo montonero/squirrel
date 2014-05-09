@@ -1,9 +1,9 @@
 /* see copyright notice in squirrel.h */
-#include <squirrel.h>
+#include <squirrel/include/squirrel.h>
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <sqstdsystem.h>
+#include <squirrel/include/sqstdsystem.h>
 
 #ifdef SQUNICODE
 #include <wchar.h>
@@ -23,22 +23,28 @@
 static SQInteger _system_getenv(HSQUIRRELVM v)
 {
 	const SQChar *s;
+	// TODO
+#if 0
 	if(SQ_SUCCEEDED(sq_getstring(v,2,&s))){
         sq_pushstring(v,scgetenv(s),-1);
 		return 1;
 	}
+#endif
 	return 0;
 }
 
 
 static SQInteger _system_system(HSQUIRRELVM v)
 {
+#if 0
 	const SQChar *s;
 	if(SQ_SUCCEEDED(sq_getstring(v,2,&s))){
 		sq_pushinteger(v,scsystem(s));
 		return 1;
 	}
 	return sq_throwerror(v,_SC("wrong param"));
+#endif
+	return 0;
 }
 
 
@@ -58,20 +64,26 @@ static SQInteger _system_time(HSQUIRRELVM v)
 
 static SQInteger _system_remove(HSQUIRRELVM v)
 {
+#if 0
 	const SQChar *s;
 	sq_getstring(v,2,&s);
 	if(scremove(s)==-1)
 		return sq_throwerror(v,_SC("remove() failed"));
+
+#endif
 	return 0;
 }
 
 static SQInteger _system_rename(HSQUIRRELVM v)
 {
+#if 0
 	const SQChar *oldn,*newn;
 	sq_getstring(v,2,&oldn);
 	sq_getstring(v,3,&newn);
 	if(screname(oldn,newn)==-1)
 		return sq_throwerror(v,_SC("rename() failed"));
+
+#endif
 	return 0;
 }
 

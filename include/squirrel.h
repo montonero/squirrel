@@ -22,6 +22,9 @@ THE SOFTWARE.
 #ifndef _SQUIRREL_H_
 #define _SQUIRREL_H_
 
+#include <core/ige_core.h>
+#include <io/ige_io.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -106,7 +109,7 @@ struct SQInstance;
 struct SQDelegable;
 struct SQOuter;
 
-#ifdef _UNICODE
+#if ( defined(_UNICODE) || defined(IGE_UNICODE) )
 #define SQUNICODE
 #endif
 
@@ -118,7 +121,8 @@ struct SQOuter;
 #endif
 
 #else
-typedef unsigned short wchar_t;
+    #include <wchar.h>
+    #include <wctype.h>
 #endif
 
 typedef wchar_t SQChar;

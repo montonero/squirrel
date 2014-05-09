@@ -1,24 +1,49 @@
 /* see copyright notice in squirrel.h */
 #include <new>
 #include <stdio.h>
-#include <squirrel.h>
-#include <sqstdio.h>
+#include <squirrel/include/squirrel.h>
+#include <squirrel/include/sqstdio.h>
 #include "sqstdstream.h"
+
+#include <core/ige_core.h>
+#include <main/ige_main.h>
+
+#define IGE_IO
 
 #define SQSTD_FILE_TYPE_TAG (SQSTD_STREAM_TYPE_TAG | 0x00000001)
 //basic API
 SQFILE sqstd_fopen(const SQChar *filename ,const SQChar *mode)
 {
+#ifdef IGE_IO
+	ige::io::StreamRead* infile = ige::ResourceManager::openFileStream(filename, true);
+	return (SQFILE)infile;
+#else
+
 #ifndef SQUNICODE
 	return (SQFILE)fopen(filename,mode);
-#else
+#elif defined(IGE_WIN)
 	return (SQFILE)_wfopen(filename,mode);
+#else
+	ige::Filepath fileName = ige::Filepath(filename);
+	ige::core::Array<char> buf;
+	fileName.toUtf8(buf);
+	return (SQFILE)fopen(buf.getPtr(), mode);
+#endif
+
+
 #endif
 }
 
 SQInteger sqstd_fread(void* buffer, SQInteger size, SQInteger count, SQFILE file)
 {
+#ifdef IGE_IO
+	using namespace ige;
+	ige_int32 lengthRead = 0;
+	((io::StreamRead *)file)->readBuffer(buffer, size, count, &lengthRead);
+	return lengthRead;
+#else
 	return (SQInteger)fread(buffer,size,count,(FILE *)file);
+#endif
 }
 
 SQInteger sqstd_fwrite(const SQUserPointer buffer, SQInteger size, SQInteger count, SQFILE file)
@@ -28,6 +53,18 @@ SQInteger sqstd_fwrite(const SQUserPointer buffer, SQInteger size, SQInteger cou
 
 SQInteger sqstd_fseek(SQFILE file, SQInteger offset, SQInteger origin)
 {
+#ifdef IGE_IO
+	using namespace ige;
+	io::SeekInfo	realorigin;
+	switch(origin) {
+		case SQ_SEEK_CUR: realorigin = io::kFileSeekCurrent; break;
+		case SQ_SEEK_END: realorigin = io::kFileSeekEnd; break;
+		case SQ_SEEK_SET: realorigin = io::kFileSeekBegin; break;
+		default: return -1; //failed
+	}
+	((io::StreamRead*)file)->seek(offset, realorigin);
+	return 0;
+#else
 	SQInteger realorigin;
 	switch(origin) {
 		case SQ_SEEK_CUR: realorigin = SEEK_CUR; break;
@@ -36,11 +73,16 @@ SQInteger sqstd_fseek(SQFILE file, SQInteger offset, SQInteger origin)
 		default: return -1; //failed
 	}
 	return fseek((FILE *)file,(long)offset,(int)realorigin);
+#endif
 }
 
 SQInteger sqstd_ftell(SQFILE file)
 {
+#ifdef IGE_IO
+	return ((ige::io::StreamRead*)file)->tell();
+#else
 	return ftell((FILE *)file);
+#endif
 }
 
 SQInteger sqstd_fflush(SQFILE file)
@@ -50,12 +92,24 @@ SQInteger sqstd_fflush(SQFILE file)
 
 SQInteger sqstd_fclose(SQFILE file)
 {
+#ifdef IGE_IO
+	delete (ige::io::StreamRead*)file;
+	return 0;
+#else
 	return fclose((FILE *)file);
+#endif
 }
 
 SQInteger sqstd_feof(SQFILE file)
 {
+#ifdef IGE_IO
+	if ( ((ige::io::StreamRead*)file)->isEOF() )
+		return 0;
+	else
+		return 1;
+#else
 	return feof((FILE *)file);
+#endif
 }
 
 //File
